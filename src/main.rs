@@ -5,7 +5,7 @@ use async_graphql::{
   http::{playground_source, GraphQLPlaygroundConfig},
   EmptySubscription, Schema,
 };
-use async_graphql_rocket::{Query, Request, Response};
+use async_graphql_rocket::{ GraphQLQuery, GraphQLRequest, GraphQLResponse };
 use dotenv::dotenv;
 use rocket::{response::content, routes, State};
 
@@ -24,18 +24,18 @@ async fn hello(_schema: &State<MySchema>) -> String {
 }
 
 #[rocket::get("/")]
-fn graphql_playground() -> content::Html<String> {
-  content::Html(playground_source(GraphQLPlaygroundConfig::new("/graphql")))
+fn graphql_playground() -> content::RawHtml<String> {
+  content::RawHtml(playground_source(GraphQLPlaygroundConfig::new("/graphql")))
 }
 
 #[rocket::get("/graphql?<query..>")]
-async fn graphql_query(schema: &State<MySchema>, query: Query) -> Response {
-  query.execute(schema).await
+async fn graphql_query(schema: &State<MySchema>, query: GraphQLQuery) -> GraphQLResponse {
+  query.execute(schema.inner()).await
 }
 
 #[rocket::post("/graphql", data = "<request>", format = "application/json")]
-async fn graphql_request(schema: &State<MySchema>, request: Request) -> Response {
-  request.execute(schema).await
+async fn graphql_request(schema: &State<MySchema>, request: GraphQLRequest) -> GraphQLResponse {
+  request.execute(schema.inner()).await
 }
 
 #[rocket::main]

@@ -1,6 +1,6 @@
-# chocolate-shop
+# Product-shop
 
-GraphQL backend for an imaginary chocolate shop implemented in Rust, `rocket`, `async-graphql` and `sqlx`. For detailed installation guide please refer to the [bootstrap project](https://github.com/lionkeng/sputnik). The only difference is that I used SQLx CLI instead of golang tool mentioned there.
+GraphQL backend for an imaginary Product shop implemented in Rust, `rocket`, `async-graphql` and `sqlx`. For detailed installation guide please refer to the [bootstrap project](https://github.com/lionkeng/sputnik). The only difference is that I used SQLx CLI instead of golang tool mentioned there.
 
 # Project-specific implementation details
 
@@ -9,8 +9,9 @@ GraphQL backend for an imaginary chocolate shop implemented in Rust, `rocket`, `
 GraphQL schema is quite simple:
 
 ```rust
-enum ChocolateType {
-    Bitter, White, Milk
+enum ProductType {
+    NORMAL,
+    SPECIAL,
 }
 
 type Product {
@@ -18,7 +19,7 @@ type Product {
     name: String!
     description: String!
     price: Int!
-    chocolateType: ChocolateType!
+    productType: ProductType!
     fillings: [String]
     images: [String]!
 }
@@ -29,6 +30,9 @@ type Product {
 ## Using SQLx CLI to perform migrations
 
 To facilitate the migrations flow I recommend using the [SQLx CLI](https://github.com/launchbadge/sqlx/tree/master/sqlx-cli). It allows you to add and run migrations in a clean fashion. Please refer to [migrations](/migrations) folder to see some examples.
+
+cargo install sqlx-cli --no-default-features --features native-tls,postgres
+sqlx migrate run
 
 ## Running the service
 

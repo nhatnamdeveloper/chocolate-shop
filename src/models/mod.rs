@@ -10,11 +10,10 @@ pub struct QueryRoot;
 #[derive(
   Clone, Copy, Debug, Deserialize, Display, Enum, Eq, EnumString, PartialEq, Serialize, sqlx::Type,
 )]
-#[sqlx(type_name = "chocolate_type")]
-pub enum ChocolateType {
-  Bitter,
-  White,
-  Milk,
+#[sqlx(type_name = "product_type")]
+pub enum ProductType {
+  NORMAL,
+  SPECIAL
 }
 
 #[derive(SimpleObject, sqlx::FromRow)]
@@ -24,8 +23,7 @@ struct Product {
   name: String,
   description: String,
   price: i32,
-  chocolate_type: ChocolateType,
-  fillings: Vec<String>,
+  product_type: ProductType,
   images: Vec<String>
 }
 
@@ -33,16 +31,14 @@ struct Product {
 impl QueryRoot {
   async fn products(&self, ctx: &Context<'_>) -> FieldResult<Vec<Product>> {
     let pool = ctx.data::<Pool>().unwrap();
-    let query_str = format!("select id, name, description, price, chocolate_type, 
-      fillings, images from products order by id");
+    let query_str = format!("select id, name, description, price, product_type, images from products order by id");
     let result = sqlx::query(query_str.as_str())
       .map(|row: PgRow| Product {
         id: row.get("id"),
         name: row.get("name"),
         description: row.get("description"),
         price: row.get("price"),
-        chocolate_type: row.get("chocolate_type"),
-        fillings: row.get("fillings"),
+        product_type: row.get("product_type"),
         images: row.get("images"),
       })
       .fetch_all(pool.get().await.unwrap().deref_mut())
@@ -53,16 +49,14 @@ impl QueryRoot {
 
   async fn product(&self, ctx: &Context<'_>, id: ID) -> FieldResult<Product> {
     let pool = ctx.data::<Pool>().unwrap();
-    let query_str = format!("select id, name, description, price, chocolate_type, 
-      fillings, images from products where id = {}", String::from(id));
+    let query_str = format!("select id, name, description, price, product_type, images from products where id = {}", String::from(id));
     let result = sqlx::query(query_str.as_str())
       .map(|row: PgRow| Product {
         id: row.get("id"),
         name: row.get("name"),
         description: row.get("description"),
         price: row.get("price"),
-        chocolate_type: row.get("chocolate_type"),
-        fillings: row.get("fillings"),
+        product_type: row.get("product_type"),
         images: row.get("images"),
       })
       .fetch_one(pool.get().await.unwrap().deref_mut())
@@ -82,13 +76,12 @@ impl MutationRoot {
         name: String, 
         description: String,
         price: i32, 
-        chocolate_type: ChocolateType,
-        fillings: Vec<String>,
+        product_type: ProductType,
         images: Vec<String>,
     ) -> ID {
         let pool = ctx.data::<Pool>().unwrap();
-        let query_str = format!("insert into products(name, description, price, chocolate_type, fillings, images) 
-            values ('{}', '{}', {}, '{:?}', '{:?}', '{:?}') returning id", name, description, price, chocolate_type, fillings, images);
+        let query_str = format!("insert into products(name, description, price, product_type, images) 
+            values ('{}', '{}', {}, '{:?}', '{:?}') returning id", name, description, price, product_type, images);
         let query_str = query_str.replace("[", "{").replace("]", "}"); // handles arrays formatting
 
         let result: Result<i32, sqlx::Error> = sqlx::query(query_str.as_str())
